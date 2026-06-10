@@ -2,39 +2,38 @@ import React, { useState } from 'react';
 import './index.css';
 
 export default function App() {
-  // 1. STATE MANAGEMENT
-  const [user, setUser] = useState(null); // Track who is logged in globally
+  // 1. STATE CONFIGURATIONS
+  const [user, setUser] = useState(null); 
   const [usernameInput, setUsernameInput] = useState('');
-  const [roleInput, setRoleInput] = useState('user'); // Default register role
-  
-  const [activeTab, setActiveTab] = useState('feed'); // 'feed' or 'settings'
+  const [roleInput, setRoleInput] = useState('user'); 
+  const [activeTab, setActiveTab] = useState('feed'); 
   const [newPostText, setNewPostText] = useState('');
-  
-  // Track active typing for comments per post ID (e.g., { 1: "my comment text" })
   const [commentInputs, setCommentInputs] = useState({});
 
-  // Hardcoded initial data template
+  // Static Simulator Database Array
   const [posts, setPosts] = useState([
     { 
       id: 1, 
       author: "NexusBot", 
       role: "owner", 
-      content: "Welcome to Nexus Forums! Create an account to start testing features.",
+      content: "Welcome to Nexus Forums! Submit a thread or add responses down below.",
       comments: [
-        { id: 101, author: "AlphaMod", role: "moderator", content: "Looks clean, boss!" }
+        { id: 101, author: "AlphaMod", role: "moderator", content: "Systems operational." }
       ]
     }
   ]);
 
-  // 2. HANDLERS
+  // 2. LOGIC OPERATIONS
   const handleLogin = (e) => {
     e.preventDefault();
     if (!usernameInput.trim()) return;
     
-    // Set user globally based on whatever they type into the login screen
+    // Automatically flag creator profile as owner, otherwise apply selected role
+    const assignedRole = usernameInput.toLowerCase() === 'momurtaja' ? 'owner' : roleInput;
+    
     setUser({
       username: usernameInput.trim(),
-      role: usernameInput.toLowerCase() === 'momurtaja' ? 'owner' : roleInput
+      role: assignedRole
     });
   };
 
@@ -49,7 +48,7 @@ export default function App() {
     if (!newPostText.trim()) return;
 
     const newPost = {
-      id: Date.now(), // Generate unique ID
+      id: Date.now(), 
       author: user.username,
       role: user.role,
       content: newPostText,
@@ -65,7 +64,6 @@ export default function App() {
     const text = commentInputs[postId];
     if (!text || !text.trim()) return;
 
-    // Map through posts and append comment to the matching post item
     setPosts(posts.map(post => {
       if (post.id === postId) {
         return {
@@ -84,24 +82,25 @@ export default function App() {
       return post;
     }));
 
-    // Clear just this specific post's comment input box
     setCommentInputs({ ...commentInputs, [postId]: '' });
   };
 
-  // 3. RENDER: LOGIN SCREEN (If not logged in)
+  // 3. GATE VIEW: LOGIN GATEWAY
   if (!user) {
     return (
       <div className="login-gate">
         <div className="login-card">
-          <h1>Nexus Forums</h1>
-          <p>Sign in to join the community network</p>
+          <div className="login-header">
+            <h1>Nexus Forums</h1>
+            <p>Access the developer network terminal</p>
+          </div>
           
           <form onSubmit={handleLogin}>
             <div className="form-group">
-              <label>Username</label>
+              <label>Authentication Username</label>
               <input 
                 type="text" 
-                placeholder="Enter screen name..." 
+                placeholder="Enter handle name..." 
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
                 required
@@ -109,42 +108,44 @@ export default function App() {
             </div>
 
             <div className="form-group">
-              <label>Select Account Role (Testing Mode)</label>
+              <label>Clearance Permissions Level</label>
               <select value={roleInput} onChange={(e) => setRoleInput(e.target.value)}>
-                <option value="user">Standard Member</option>
+                <option value="user">Standard User</option>
                 <option value="moderator">Forum Moderator</option>
               </select>
-              <small>Tip: Type 'MoMurtaja' as your name to bypass and auto-login as Owner.</small>
+              <span className="form-tip">Pro-tip: Input name 'MoMurtaja' to unlock absolute Owner state.</span>
             </div>
 
-            <button type="submit" className="btn-primary">Access Gateway</button>
+            <button type="submit" className="btn-primary">Initialize Login</button>
           </form>
         </div>
       </div>
     );
   }
 
-  // 4. RENDER: MAIN APPLICATION VIEW (If authenticated)
+  // 4. MAIN INTERFACE VIEW
   return (
     <div className="forum-container">
-      {/* SIDEBAR */}
+      {/* COLUMN A: CONTROL SIDEBAR */}
       <aside className="sidebar">
-        <div className="brand">
+        <div className="brand-header">
           <h2>Nexus Forums</h2>
-          <span className="online-dot"></span> Live Portal
+          <div className="status-indicator">
+            <span className="dot-green"></span> Online Local Sandbox
+          </div>
         </div>
         
-        <div className="user-profile-card">
-          <p>User: <strong>{user.username}</strong></p>
-          <span className={`badge badge-${user.role}`}>{user.role.toUpperCase()}</span>
+        <div className="user-badge-card">
+          <p className="profile-name">User: <strong>{user.username}</strong></p>
+          <span className={`badge badge-${user.role}`}>{user.role}</span>
         </div>
         
-        <nav className="nav-menu">
+        <nav className="navigation-links">
           <button 
             className={`menu-item ${activeTab === 'feed' ? 'active' : ''}`}
             onClick={() => setActiveTab('feed')}
           >
-            🏠 Central Feed
+            🏠 Activity Feed
           </button>
 
           {(user.role === 'owner' || user.role === 'moderator') && (
@@ -152,61 +153,62 @@ export default function App() {
               className={`menu-item ${activeTab === 'settings' ? 'active' : ''}`}
               onClick={() => setActiveTab('settings')}
             >
-              ⚙️ Security Settings
+              ⚙️ Server Controls
             </button>
           )}
 
           <button onClick={handleLogout} className="btn-logout">
-            🚪 Terminate Session
+            🚪 Disconnect Session
           </button>
         </nav>
       </aside>
 
-      {/* DASHBOARD INTERFACE */}
+      {/* COLUMN B: DYNAMIC CONTENT PANEL */}
       <main className="main-content">
         {activeTab === 'feed' ? (
-          <div className="feed-view">
-            <h3>Community Activity</h3>
+          <div className="feed-layout">
+            <h3>Community Pipeline</h3>
             
-            {/* Create Post Interface */}
+            {/* Create Post Interface Form */}
             <form onSubmit={handleCreatePost} className="post-creator-form">
               <textarea 
                 value={newPostText}
                 onChange={(e) => setNewPostText(e.target.value)}
-                placeholder="Share an update or broadcast to the network..."
+                placeholder="Broadcast a new topic configuration to the dashboard..."
                 required
               />
-              <button type="submit" className="btn-primary">Broadcast Post</button>
+              <button type="submit" className="btn-primary-small">Publish Thread</button>
             </form>
 
-            {/* Displaying Live Threads */}
-            <div className="posts-container">
+            {/* Iterating Content Stack */}
+            <div className="posts-stack">
               {posts.map(post => (
                 <div key={post.id} className="post-card">
-                  <div className="card-header">
-                    <span className="author-name">{post.author}</span>
+                  <div className="card-top-row">
+                    <span className="user-handle">{post.author}</span>
                     <span className={`badge badge-${post.role}`}>{post.role}</span>
                   </div>
-                  <p className="card-body">{post.content}</p>
+                  <p className="card-body-text">{post.content}</p>
                   
-                  {/* Comments Array Area */}
-                  <div className="comments-section">
-                    <h4>Comments ({post.comments.length})</h4>
+                  {/* Nested Comments Sub-System */}
+                  <div className="comments-module">
+                    <h5>Replies ({post.comments.length})</h5>
+                    
                     {post.comments.map(comment => (
                       <div key={comment.id} className="comment-bubble">
-                        <div className="comment-header">
+                        <div className="comment-meta">
                           <strong>{comment.author}</strong>
                           <span className={`badge badge-${comment.role}`}>{comment.role}</span>
                         </div>
-                        <p>{comment.content}</p>
+                        <p className="comment-text">{comment.content}</p>
                       </div>
                     ))}
 
-                    {/* Add Comment Box form submission */}
-                    <form onSubmit={(e) => handleCreateComment(e, post.id)} className="comment-form">
+                    {/* Inline Comment Entry Form */}
+                    <form onSubmit={(e) => handleCreateComment(e, post.id)} className="comment-form-row">
                       <input 
                         type="text"
-                        placeholder="Write a civil response..."
+                        placeholder="Type standard response..."
                         value={commentInputs[post.id] || ''}
                         onChange={(e) => setCommentInputs({
                           ...commentInputs,
@@ -214,7 +216,7 @@ export default function App() {
                         })}
                         required
                       />
-                      <button type="submit">Reply</button>
+                      <button type="submit" className="btn-reply">Reply</button>
                     </form>
                   </div>
                 </div>
@@ -222,20 +224,21 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* SETMISSIONS LEVEL RESTRICTED UI PANEL */
-          <div className="settings-view">
-            <h3>⚙️ Root Administration Console</h3>
-            <p className="text-muted">Node identity clearance confirmed. Welcome back Administrator.</p>
+          /* SECURITY CONTROL TAB VIEW PANEL */
+          <div className="settings-layout">
+            <h3>⚙️ Root Administration Infrastructure</h3>
+            <p className="text-secondary">Security context configuration workspace.</p>
             
-            <div className="settings-card">
-              <h4>System Automation Node Arrays</h4>
-              <ul>
-                <li>Active Content Restriction Firewalls [ONLINE]</li>
-                <li>Database Core State Handshakes [LOCAL SANDBOX]</li>
+            <div className="settings-panel-card">
+              <h4>System Access Matrix</h4>
+              <ul className="settings-list">
+                <li>Automated Profanity Moderation Filters [ENABLED]</li>
+                <li>Anonymous User Registration Gateways [SANDBOX MODE]</li>
+                <li>Database Volatility Status Tracking [VIRTUAL ENVIROMENT]</li>
               </ul>
-              <p className="db-alert">
-                ⚠️ NOTICE: You are currently running in Frontend Simulation mode. Persisted data volumes require cloud backend database synchronization strings.
-              </p>
+              <div className="alert-banner">
+                <strong>Memory Persistence Notice:</strong> This build is running entirely in temporary memory variables. To prevent comments and accounts from disappearing on page reload, standard production configurations require a cloud cluster backend (such as a Supabase or Postgres pool instance).
+              </div>
             </div>
           </div>
         )}
