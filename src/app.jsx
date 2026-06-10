@@ -1,8 +1,10 @@
+"use client"; // Prevents framework build server compilation failures
+
 import React, { useState } from 'react';
 import './index.css';
 
 export default function App() {
-  // 1. STATE CONFIGURATIONS
+  // 1. COMPILER PROTECTED BOUNDARY STATES
   const [user, setUser] = useState(null); 
   const [usernameInput, setUsernameInput] = useState('');
   const [roleInput, setRoleInput] = useState('user'); 
@@ -10,30 +12,30 @@ export default function App() {
   const [newPostText, setNewPostText] = useState('');
   const [commentInputs, setCommentInputs] = useState({});
 
-  // Static Simulator Database Array
+  // Thread Memory Template Layout Arrays
   const [posts, setPosts] = useState([
     { 
       id: 1, 
       author: "NexusBot", 
       role: "owner", 
-      content: "Welcome to Nexus Forums! Submit a thread or add responses down below.",
+      content: "Welcome to Nexus Forums! Add threads, shift account profiles, and post interactive comments.",
       comments: [
-        { id: 101, author: "AlphaMod", role: "moderator", content: "Systems operational." }
+        { id: 101, author: "AlphaMod", role: "moderator", content: "Main network pipelines online." }
       ]
     }
   ]);
 
-  // 2. LOGIC OPERATIONS
+  // 2. RUNTIME ACTION UTILITIES
   const handleLogin = (e) => {
     e.preventDefault();
-    if (!usernameInput.trim()) return;
+    if (!usernameInput || !usernameInput.trim()) return;
     
-    // Automatically flag creator profile as owner, otherwise apply selected role
-    const assignedRole = usernameInput.toLowerCase() === 'momurtaja' ? 'owner' : roleInput;
+    const targetName = usernameInput.trim();
+    const evaluatedRole = targetName.toLowerCase() === 'momurtaja' ? 'owner' : roleInput;
     
     setUser({
-      username: usernameInput.trim(),
-      role: assignedRole
+      username: targetName,
+      role: evaluatedRole
     });
   };
 
@@ -45,47 +47,47 @@ export default function App() {
 
   const handleCreatePost = (e) => {
     e.preventDefault();
-    if (!newPostText.trim()) return;
+    if (!newPostText || !newPostText.trim()) return;
 
-    const newPost = {
+    const freshlyGeneratedPost = {
       id: Date.now(), 
       author: user.username,
       role: user.role,
-      content: newPostText,
+      content: newPostText.trim(),
       comments: []
     };
 
-    setPosts([newPost, ...posts]);
+    setPosts([freshlyGeneratedPost, ...posts]);
     setNewPostText('');
   };
 
   const handleCreateComment = (e, postId) => {
     e.preventDefault();
-    const text = commentInputs[postId];
-    if (!text || !text.trim()) return;
+    const commentBodyText = commentInputs[postId];
+    if (!commentBodyText || !commentBodyText.trim()) return;
 
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
+    setPosts(posts.map(individualPost => {
+      if (individualPost.id === postId) {
         return {
-          ...post,
+          ...individualPost,
           comments: [
-            ...post.comments,
+            ...individualPost.comments,
             {
               id: Date.now(),
               author: user.username,
               role: user.role,
-              content: text.trim()
+              content: commentBodyText.trim()
             }
           ]
         };
       }
-      return post;
+      return individualPost;
     }));
 
     setCommentInputs({ ...commentInputs, [postId]: '' });
   };
 
-  // 3. GATE VIEW: LOGIN GATEWAY
+  // 3. UI RENDER COMPONENT: ACCESS PORTAL GATEWAY
   if (!user) {
     return (
       <div className="login-gate">
@@ -123,10 +125,10 @@ export default function App() {
     );
   }
 
-  // 4. MAIN INTERFACE VIEW
+  // 4. MAIN OPERATIONAL DASHBOARD FRAMEWORK
   return (
     <div className="forum-container">
-      {/* COLUMN A: CONTROL SIDEBAR */}
+      {/* COLUMN A: APP SIDEBAR CONTROL NODE */}
       <aside className="sidebar">
         <div className="brand-header">
           <h2>Nexus Forums</h2>
@@ -142,7 +144,7 @@ export default function App() {
         
         <nav className="navigation-links">
           <button 
-            className={`menu-item ${activeTab === 'feed' ? 'active' : ''}`}
+            className={activeTab === 'feed' ? "menu-item active" : "menu-item"}
             onClick={() => setActiveTab('feed')}
           >
             🏠 Activity Feed
@@ -150,7 +152,7 @@ export default function App() {
 
           {(user.role === 'owner' || user.role === 'moderator') && (
             <button 
-              className={`menu-item ${activeTab === 'settings' ? 'active' : ''}`}
+              className={activeTab === 'settings' ? "menu-item active" : "menu-item"}
               onClick={() => setActiveTab('settings')}
             >
               ⚙️ Server Controls
@@ -163,13 +165,13 @@ export default function App() {
         </nav>
       </aside>
 
-      {/* COLUMN B: DYNAMIC CONTENT PANEL */}
+      {/* COLUMN B: MAIN CORE CONTENT CONSOLE INTERFACE */}
       <main className="main-content">
         {activeTab === 'feed' ? (
           <div className="feed-layout">
             <h3>Community Pipeline</h3>
             
-            {/* Create Post Interface Form */}
+            {/* Create Post Form */}
             <form onSubmit={handleCreatePost} className="post-creator-form">
               <textarea 
                 value={newPostText}
@@ -180,7 +182,7 @@ export default function App() {
               <button type="submit" className="btn-primary-small">Publish Thread</button>
             </form>
 
-            {/* Iterating Content Stack */}
+            {/* Streaming Message Cards Stack */}
             <div className="posts-stack">
               {posts.map(post => (
                 <div key={post.id} className="post-card">
@@ -190,7 +192,7 @@ export default function App() {
                   </div>
                   <p className="card-body-text">{post.content}</p>
                   
-                  {/* Nested Comments Sub-System */}
+                  {/* Nested Comments UI Module rendering mapping list */}
                   <div className="comments-module">
                     <h5>Replies ({post.comments.length})</h5>
                     
@@ -204,7 +206,7 @@ export default function App() {
                       </div>
                     ))}
 
-                    {/* Inline Comment Entry Form */}
+                    {/* Appending Interactive Reply Row node inputs */}
                     <form onSubmit={(e) => handleCreateComment(e, post.id)} className="comment-form-row">
                       <input 
                         type="text"
@@ -224,7 +226,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* SECURITY CONTROL TAB VIEW PANEL */
+          /* CONFIG MANAGEMENT SYSTEM CONTROL SHEET PANEL */
           <div className="settings-layout">
             <h3>⚙️ Root Administration Infrastructure</h3>
             <p className="text-secondary">Security context configuration workspace.</p>
