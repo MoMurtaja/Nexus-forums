@@ -1,251 +1,87 @@
-"use client"; // Prevents framework build server compilation failures
-
 import React, { useState } from 'react';
-import './index.css';
+import { supabase } from './supabaseClient'; // Import our new connection
 
 export default function App() {
-  // 1. COMPILER PROTECTED BOUNDARY STATES
-  const [user, setUser] = useState(null); 
-  const [usernameInput, setUsernameInput] = useState('');
-  const [roleInput, setRoleInput] = useState('user'); 
-  const [activeTab, setActiveTab] = useState('feed'); 
+  const [user, setUser] = useState({ username: "MoMurtaja", role: "owner" }); // Simulated logged-in user
   const [newPostText, setNewPostText] = useState('');
-  const [commentInputs, setCommentInputs] = useState({});
+  const [imageFile, setImageFile] = useState(null); // Track selected image file
+  const [loading, setLoading] = useState(false);
 
-  // Thread Memory Template Layout Arrays
-  const [posts, setPosts] = useState([
-    { 
-      id: 1, 
-      author: "NexusBot", 
-      role: "owner", 
-      content: "Welcome to Nexus Forums! Add threads, shift account profiles, and post interactive comments.",
-      comments: [
-        { id: 101, author: "AlphaMod", role: "moderator", content: "Main network pipelines online." }
-      ]
-    }
-  ]);
-
-  // 2. RUNTIME ACTION UTILITIES
-  const handleLogin = (e) => {
+  const handleCreatePost = async (e) => {
     e.preventDefault();
-    if (!usernameInput || !usernameInput.trim()) return;
-    
-    const targetName = usernameInput.trim();
-    const evaluatedRole = targetName.toLowerCase() === 'momurtaja' ? 'owner' : roleInput;
-    
-    setUser({
-      username: targetName,
-      role: evaluatedRole
-    });
-  };
+    if (!newPostText.trim()) return;
 
-  const handleLogout = () => {
-    setUser(null);
-    setUsernameInput('');
-    setActiveTab('feed');
-  };
+    setLoading(true);
+    let imageUrl = null;
 
-  const handleCreatePost = (e) => {
-    e.preventDefault();
-    if (!newPostText || !newPostText.trim()) return;
+    try {
+      // 1. IF AN IMAGE WAS SELECTED, UPLOAD IT TO THE STORAGE BUCKET FIRST
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`; // Create a unique file name
+        const filePath = `post-images/${fileName}`;
 
-    const freshlyGeneratedPost = {
-      id: Date.now(), 
-      author: user.username,
-      role: user.role,
-      content: newPostText.trim(),
-      comments: []
-    };
+        // Upload file to Supabase Bucket named "images"
+        let { error: uploadError } = await supabase.storage
+          .from('images')
+          .upload(filePath, imageFile);
 
-    setPosts([freshlyGeneratedPost, ...posts]);
-    setNewPostText('');
-  };
+        if (uploadError) throw uploadError;
 
-  const handleCreateComment = (e, postId) => {
-    e.preventDefault();
-    const commentBodyText = commentInputs[postId];
-    if (!commentBodyText || !commentBodyText.trim()) return;
-
-    setPosts(posts.map(individualPost => {
-      if (individualPost.id === postId) {
-        return {
-          ...individualPost,
-          comments: [
-            ...individualPost.comments,
-            {
-              id: Date.now(),
-              author: user.username,
-              role: user.role,
-              content: commentBodyText.trim()
-            }
-          ]
-        };
+        // Get the public URL of the uploaded image
+        const { data } = supabase.storage.from('images').getPublicUrl(filePath);
+        imageUrl = data.publicUrl;
       }
-      return individualPost;
-    }));
 
-    setCommentInputs({ ...commentInputs, [postId]: '' });
+      // 2. INSERT THE TEXT AND THE IMAGE URL INTO THE SUPABASE DATABASE
+      const { error: dbError } = await supabase
+        .from('posts')
+        .insert([
+          {
+            author: user.username,
+            role: user.role,
+            content: newPostText.trim(),
+            image_url: imageUrl, // Saves the link to the image (or null if no image)
+            created_at: new Date()
+          }
+        ]);
+
+      if (dbError) throw dbError;
+
+      // Clear form on success
+      setNewPostText('');
+      setImageFile(null);
+      alert('Post published globally!');
+
+    } catch (error) {
+      alert('Error publishing post: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // 3. UI RENDER COMPONENT: ACCESS PORTAL GATEWAY
-  if (!user) {
-    return (
-      <div className="login-gate">
-        <div className="login-card">
-          <div className="login-header">
-            <h1>Nexus Forums</h1>
-            <p>Access the developer network terminal</p>
-          </div>
-          
-          <form onSubmit={handleLogin}>
-            <div className="form-group">
-              <label>Authentication Username</label>
-              <input 
-                type="text" 
-                placeholder="Enter handle name..." 
-                value={usernameInput}
-                onChange={(e) => setUsernameInput(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Clearance Permissions Level</label>
-              <select value={roleInput} onChange={(e) => setRoleInput(e.target.value)}>
-                <option value="user">Standard User</option>
-                <option value="moderator">Forum Moderator</option>
-              </select>
-              <span className="form-tip">Pro-tip: Input name 'MoMurtaja' to unlock absolute Owner state.</span>
-            </div>
-
-            <button type="submit" className="btn-primary">Initialize Login</button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // 4. MAIN OPERATIONAL DASHBOARD FRAMEWORK
   return (
-    <div className="forum-container">
-      {/* COLUMN A: APP SIDEBAR CONTROL NODE */}
-      <aside className="sidebar">
-        <div className="brand-header">
-          <h2>Nexus Forums</h2>
-          <div className="status-indicator">
-            <span className="dot-green"></span> Online Local Sandbox
-          </div>
-        </div>
-        
-        <div className="user-badge-card">
-          <p className="profile-name">User: <strong>{user.username}</strong></p>
-          <span className={`badge badge-${user.role}`}>{user.role}</span>
-        </div>
-        
-        <nav className="navigation-links">
-          <button 
-            className={activeTab === 'feed' ? "menu-item active" : "menu-item"}
-            onClick={() => setActiveTab('feed')}
-          >
-            🏠 Activity Feed
-          </button>
+    <form onSubmit={handleCreatePost} className="post-creator-form">
+      <textarea 
+        value={newPostText}
+        onChange={(e) => setNewPostText(e.target.value)}
+        placeholder="Broadcast a new topic to the network..."
+        required
+      />
+      
+      {/* File input for images */}
+      <div className="file-upload-row" style={{ marginTop: '10px' }}>
+        <input 
+          type="file" 
+          accept="image/*" 
+          onChange={(e) => setImageFile(e.target.files[0])} 
+        />
+      </div>
 
-          {(user.role === 'owner' || user.role === 'moderator') && (
-            <button 
-              className={activeTab === 'settings' ? "menu-item active" : "menu-item"}
-              onClick={() => setActiveTab('settings')}
-            >
-              ⚙️ Server Controls
-            </button>
-          )}
-
-          <button onClick={handleLogout} className="btn-logout">
-            🚪 Disconnect Session
-          </button>
-        </nav>
-      </aside>
-
-      {/* COLUMN B: MAIN CORE CONTENT CONSOLE INTERFACE */}
-      <main className="main-content">
-        {activeTab === 'feed' ? (
-          <div className="feed-layout">
-            <h3>Community Pipeline</h3>
-            
-            {/* Create Post Form */}
-            <form onSubmit={handleCreatePost} className="post-creator-form">
-              <textarea 
-                value={newPostText}
-                onChange={(e) => setNewPostText(e.target.value)}
-                placeholder="Broadcast a new topic configuration to the dashboard..."
-                required
-              />
-              <button type="submit" className="btn-primary-small">Publish Thread</button>
-            </form>
-
-            {/* Streaming Message Cards Stack */}
-            <div className="posts-stack">
-              {posts.map(post => (
-                <div key={post.id} className="post-card">
-                  <div className="card-top-row">
-                    <span className="user-handle">{post.author}</span>
-                    <span className={`badge badge-${post.role}`}>{post.role}</span>
-                  </div>
-                  <p className="card-body-text">{post.content}</p>
-                  
-                  {/* Nested Comments UI Module rendering mapping list */}
-                  <div className="comments-module">
-                    <h5>Replies ({post.comments.length})</h5>
-                    
-                    {post.comments.map(comment => (
-                      <div key={comment.id} className="comment-bubble">
-                        <div className="comment-meta">
-                          <strong>{comment.author}</strong>
-                          <span className={`badge badge-${comment.role}`}>{comment.role}</span>
-                        </div>
-                        <p className="comment-text">{comment.content}</p>
-                      </div>
-                    ))}
-
-                    {/* Appending Interactive Reply Row node inputs */}
-                    <form onSubmit={(e) => handleCreateComment(e, post.id)} className="comment-form-row">
-                      <input 
-                        type="text"
-                        placeholder="Type standard response..."
-                        value={commentInputs[post.id] || ''}
-                        onChange={(e) => setCommentInputs({
-                          ...commentInputs,
-                          [post.id]: e.target.value
-                        })}
-                        required
-                      />
-                      <button type="submit" className="btn-reply">Reply</button>
-                    </form>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          /* CONFIG MANAGEMENT SYSTEM CONTROL SHEET PANEL */
-          <div className="settings-layout">
-            <h3>⚙️ Root Administration Infrastructure</h3>
-            <p className="text-secondary">Security context configuration workspace.</p>
-            
-            <div className="settings-panel-card">
-              <h4>System Access Matrix</h4>
-              <ul className="settings-list">
-                <li>Automated Profanity Moderation Filters [ENABLED]</li>
-                <li>Anonymous User Registration Gateways [SANDBOX MODE]</li>
-                <li>Database Volatility Status Tracking [VIRTUAL ENVIROMENT]</li>
-              </ul>
-              <div className="alert-banner">
-                <strong>Memory Persistence Notice:</strong> This build is running entirely in temporary memory variables. To prevent comments and accounts from disappearing on page reload, standard production configurations require a cloud cluster backend (such as a Supabase or Postgres pool instance).
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-    </div>
+      <button type="submit" className="btn-primary-small" disabled={loading}>
+        {loading ? 'Uploading...' : 'Publish Thread'}
+      </button>
+    </form>
   );
 }
 
