@@ -2,18 +2,18 @@
 
 :root {
   /* Premium Deep Slate/Zinc Theme */
-  --bg-main: #09090b;       /* Dark background */
-  --bg-card: #141417;       /* Card elements */
-  --bg-card-hover: #1f1f23; /* Hover highlights */
+  --bg-main: #09090b;       
+  --bg-card: #141417;       
+  --bg-card-hover: #1f1f23; 
   --accent: #0284c7;        /* Clean Sky Blue instead of AI purple */
   --accent-hover: #0369a1;  
-  --border: #27272a;        /* Subtle border lines */
+  --border: #27272a;        
   
   /* Text scales */
   --text-main: #f4f4f5;
   --text-muted: #a1a1aa;
-  --text-owner: #ef4444;    /* Crimson for Owner tags */
-  --text-mod: #22c55e;      /* Green for Moderator tags */
+  --text-owner: #ef4444;    
+  --text-mod: #22c55e;      
 }
 
 html {
@@ -36,7 +36,7 @@ a, button, .post-card, .menu-item {
 /* Layout Components */
 .forum-container {
   display: flex;
-  max-w: 1200px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -63,7 +63,7 @@ a, button, .post-card, .menu-item {
 
 .post-card:hover {
   background-color: var(--bg-card-hover);
-  transform: translateY(-2px); /* Smooth lift effect */
+  transform: translateY(-2px); 
 }
 
 .badge {

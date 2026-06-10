@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import './globals.css';
+import './index.css'; // Importing your updated stylesheet
 
-export default function ForumApp() {
-  // Simulator for who is currently logged in.
-  // Change role to 'user' or 'moderator' to see the settings option disappear!
+export default function App() {
+  // Simulator for current logged-in user.
   const [currentUser, setCurrentUser] = useState({
     id: "user_01",
     username: "MoMurtaja",
@@ -32,8 +31,6 @@ export default function ForumApp() {
       content: newPostText
     };
 
-    // Note: This updates the local screen state. To make others see it live,
-    // you will link this function to a cloud database pool like Supabase or Firebase!
     setPosts([newPost, ...posts]);
     setNewPostText("");
   };
@@ -47,10 +44,18 @@ export default function ForumApp() {
           Logged in as: <strong>{currentUser.username}</strong>
         </p>
         
-        <nav style={{ display: 'flex', flexDirection: 'col', gap: '10px', marginTop: '20px' }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
           <button 
             className="menu-item" 
-            style={{ background: activeTab === 'feed' ? var(--accent) : 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '10px', cursor: 'pointer', borderRadius: '4px' }}
+            style={{ 
+              background: activeTab === 'feed' ? 'var(--accent)' : 'transparent', 
+              border: 'none', 
+              color: '#fff', 
+              textAlign: 'left', 
+              padding: '10px', 
+              cursor: 'pointer', 
+              borderRadius: '4px' 
+            }}
             onClick={() => setActiveTab('feed')}
           >
             🏠 Community Feed
@@ -60,7 +65,15 @@ export default function ForumApp() {
           {(currentUser.role === 'owner' || currentUser.role === 'moderator') && (
             <button 
               className="menu-item" 
-              style={{ background: activeTab === 'settings' ? 'rgba(2, 132, 199, 0.2)' : 'transparent', border: '1px dashed var(--border)', color: '#fff', textAlign: 'left', padding: '10px', cursor: 'pointer', borderRadius: '4px' }}
+              style={{ 
+                background: activeTab === 'settings' ? 'rgba(2, 132, 199, 0.2)' : 'transparent', 
+                border: '1px dashed var(--border)', 
+                color: '#fff', 
+                textAlign: 'left', 
+                padding: '10px', 
+                cursor: 'pointer', 
+                borderRadius: '4px' 
+              }}
               onClick={() => setActiveTab('settings')}
             >
               ⚙️ Admin Settings panel ({currentUser.role})
@@ -81,7 +94,16 @@ export default function ForumApp() {
                 value={newPostText}
                 onChange={(e) => setNewPostText(e.target.value)}
                 placeholder="What's on your mind?"
-                style={{ width: '100%', minHeight: '80px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', color: '#fff', padding: '12px', borderRadius: '6px', resize: 'vertical' }}
+                style={{ 
+                  width: '100%', 
+                  minHeight: '80px', 
+                  backgroundColor: 'var(--bg-card)', 
+                  border: '1px solid var(--border)', 
+                  color: '#fff', 
+                  padding: '12px', 
+                  borderRadius: '6px', 
+                  resize: 'vertical' 
+                }}
               />
               <button type="submit" style={{ marginTop: '8px', backgroundColor: 'var(--accent)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}>
                 Publish Post
@@ -110,13 +132,13 @@ export default function ForumApp() {
             
             <div style={{ backgroundColor: 'var(--bg-card)', padding: '20px', borderRadius: '8px', border: '1px solid var(--border)' }}>
               <h4>Management Controls</h4>
-              <ul>
+              <ul style={{ paddingLeft: '20px', lineHeight: '1.8' }}>
                 <li>System-wide Content Censorship Configurations</li>
                 <li>Approve New Forum Moderator Access Request Nodes</li>
                 <li>Database Sync Portals (Supabase Connection Utilities)</li>
               </ul>
               {currentUser.role !== 'owner' && (
-                <p style={{ color: 'var(--text-owner)', fontSize: '0.85rem' }}>⚠️ Warning: Only the full system Owner has write permissions to modify database environment variables.</p>
+                <p style={{ color: 'var(--text-owner)', fontSize: '0.85rem', marginTop: '15px' }}>⚠️ Warning: Only the full system Owner has write permissions to modify database environment variables.</p>
               )}
             </div>
           </div>
